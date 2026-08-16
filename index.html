@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICU Smart Infusion Calculator</title>
+<meta name="theme-color" content="#0B2545">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ICU Infusion">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root{
+    --navy:#0B2545;
+    --navy-2:#123566;
+    --paper:#F3F6FB;
+    --card:#FFFFFF;
+    --alert:#C1272D;
+    --alert-2:#E64A4A;
+    --amber:#F2A93B;
+    --teal:#1B98E0;
+    --success:#2E8B57;
+    --ink:#0B2545;
+    --ink-soft:#5C7095;
+    --line:#DCE4F0;
+    --lcd-bg:#0C1B12;
+    --lcd-fg:#5FF08A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 500px at 10% -10%, #12305c 0%, transparent 60%),
+      radial-gradient(900px 400px at 110% 0%, #0e2a52 0%, transparent 55%),
+      var(--paper);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Arial,sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+
+  /* ---------- Header ---------- */
+  .banner{
+    background:linear-gradient(120deg,var(--alert),var(--alert-2));
+    color:#fff;
+    border-radius:16px 16px 0 0;
+    padding:12px 20px;
+    display:flex;align-items:center;gap:10px;
+    font-weight:700;font-size:14px;letter-spacing:.2px;
+    box-shadow:0 6px 18px rgba(193,39,45,.25);
+  }
+  .banner .dot{
+    width:22px;height:22px;border-radius:50%;
+    background:var(--amber);color:var(--navy);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;flex:none;
+  }
+  .header{
+    background:linear-gradient(135deg,var(--navy),var(--navy-2));
+    color:#fff;
+    padding:26px 24px 22px;
+    display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+    flex-wrap:wrap;
+  }
+  .header h1{
+    margin:0;font-size:26px;font-weight:800;letter-spacing:.2px;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Arial,sans-serif;
+  }
+  .header .sub{color:#9FC2FF;font-weight:600;font-size:13.5px;margin-top:4px;}
+  .header .tag{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;color:#CFE0FF;
+  }
+
+  .shell{
+    background:var(--card);
+    border-radius:0 0 20px 20px;
+    box-shadow:0 20px 50px rgba(11,37,69,.14);
+    overflow:hidden;
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex;background:#EEF3FB;border-bottom:1px solid var(--line);}
+  .tab{
+    flex:1;text-align:center;padding:14px 8px;font-weight:700;font-size:14px;
+    color:var(--ink-soft);cursor:pointer;user-select:none;position:relative;
+    transition:.15s;
+  }
+  .tab.active{color:var(--navy);background:#fff;}
+  .tab.active::after{
+    content:'';position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--teal);
+  }
+
+  .panel{padding:26px 24px 8px;display:none;}
+  .panel.active{display:block;}
+
+  /* ---------- Form ---------- */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;
+  }
+  .field .hint{font-size:11.5px;color:var(--ink-soft);font-weight:500;margin-top:5px;}
+  select,input[type=number],input[type=text]{
+    width:100%;padding:11px 12px;border-radius:10px;border:1.5px solid var(--line);
+    font-size:15px;font-family:inherit;color:var(--ink);background:#fff;
+    transition:.15s;
+  }
+  select:focus,input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(27,152,224,.15);}
+  .inline-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .inline-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+  .section-title{
+    display:flex;align-items:center;gap:10px;margin:26px 0 14px;
+  }
+  .section-title .num{
+    width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;
+    font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .section-title h3{margin:0;font-size:15.5px;font-weight:800;color:var(--navy);}
+
+  .conc-readout{
+    background:#F0F6FF;border:1px dashed #9FC2FF;border-radius:10px;
+    padding:10px 14px;font-size:13.5px;color:var(--navy-2);font-weight:600;margin-top:2px;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    appearance:none;border:none;cursor:pointer;font-family:inherit;
+    font-weight:800;font-size:15px;border-radius:12px;padding:14px 18px;
+    transition:.15s;width:100%;
+  }
+  .btn-primary{background:var(--teal);color:#fff;box-shadow:0 8px 20px rgba(27,152,224,.35);}
+  .btn-primary:hover{background:#1685c7;}
+  .btn-primary:disabled{background:#B7C6DC;box-shadow:none;cursor:not-allowed;}
+
+  /* ---------- Checklist ---------- */
+  .checklist{
+    background:#0B2545;border-radius:16px;padding:18px 18px 8px;margin:22px 0 20px;
+  }
+  .checklist-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .checklist-head .star{color:var(--amber);font-size:16px;}
+  .checklist-head h3{color:#fff;font-size:15px;margin:0;font-weight:800;}
+  .check-item{
+    display:flex;align-items:flex-start;gap:12px;background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:11px 12px;margin-bottom:10px;
+    cursor:pointer;
+  }
+  .check-item.checked{background:rgba(95,240,138,.12);border-color:rgba(95,240,138,.4);}
+  .check-item .box{
+    width:20px;height:20px;border-radius:6px;border:2px solid #7C93BF;flex:none;margin-top:1px;
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;
+    transition:.15s;
+  }
+  .check-item.checked .box{background:var(--success);border-color:var(--success);color:#fff;}
+  .check-item .txt{color:#DCE6FA;font-size:13.5px;line-height:1.45;font-weight:600;}
+  .check-item .txt b{color:#fff;}
+  .check-item.critical .txt b{color:var(--amber);}
+
+  /* ---------- Result / Pump display ---------- */
+  .result{margin-top:22px;}
+  .pump{
+    background:linear-gradient(160deg,#1a2230,#0d131c);
+    border-radius:20px;padding:20px;box-shadow:0 18px 40px rgba(0,0,0,.35);
+    border:1px solid #2a3346;
+  }
+  .pump-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .pump-top .name{color:#8EA0C4;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+  .pump-top .badge{
+    background:rgba(95,240,138,.15);color:var(--lcd-fg);border:1px solid rgba(95,240,138,.4);
+    border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;
+  }
+  .lcd{
+    background:var(--lcd-bg);border-radius:12px;padding:22px 20px;
+    box-shadow:inset 0 0 20px rgba(0,0,0,.6);
+  }
+  .lcd .rate{
+    font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace;color:var(--lcd-fg);
+    font-size:52px;font-weight:700;letter-spacing:1px;text-shadow:0 0 14px rgba(95,240,138,.45);
+    display:flex;align-items:baseline;gap:10px;
+  }
+  .lcd .rate small{font-size:16px;color:#8FE3A9;font-weight:600;}
+  .lcd .drug{color:#B9F5CC;font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace;font-size:13px;margin-top:8px;font-weight:600;}
+  .lcd .warn{color:var(--amber);font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace;font-size:12px;margin-top:6px;font-weight:600;}
+
+  .breakdown{
+    margin-top:16px;background:#F7FAFF;border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+  }
+  .breakdown h4{margin:0 0 8px;font-size:13px;color:var(--navy);font-weight:800;}
+  .breakdown .row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px dashed var(--line);color:var(--ink-soft);font-weight:600;}
+  .breakdown .row:last-child{border-bottom:none;color:var(--navy);font-weight:800;}
+  .breakdown .row span:last-child{font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace;color:var(--navy);}
+
+  .double-check{
+    margin-top:16px;display:flex;gap:10px;background:#FFF7E8;border:1px solid #F2D08A;
+    border-radius:12px;padding:12px 14px;font-size:12.5px;color:#8A5A00;font-weight:600;line-height:1.5;
+  }
+  .double-check .ic{font-size:18px;flex:none;}
+
+  .alert-box{
+    display:none;margin-top:14px;background:#FDECEC;border:1px solid #F3B6B6;color:var(--alert);
+    border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;
+  }
+
+  footer{
+    text-align:center;color:var(--ink-soft);font-size:12px;margin-top:22px;font-weight:600;
+  }
+  footer .strong{color:var(--navy);font-weight:800;}
+
+  .disclaimer{
+    max-width:920px;margin:18px auto 0;background:#FDECEC;border:1px solid #F3B6B6;
+    border-radius:14px;padding:14px 18px;color:#8A1F1F;font-size:12.5px;font-weight:600;line-height:1.6;
+  }
+
+  /* ---------- Mobile / PWA ---------- */
+  .offline-pill{position:fixed;right:10px;bottom:10px;z-index:50;background:#0B2545;color:#fff;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.18);opacity:.92}
+  .offline-pill.offline{background:#8A1F1F}
+  @media(max-width:640px){body{padding:0 0 calc(28px + env(safe-area-inset-bottom));background:var(--paper)}.wrap{max-width:none;width:100%}.banner{border-radius:0;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));font-size:12px}.header{padding:20px 16px 16px}.header h1{font-size:22px}.header .tag{font-size:10.5px}.shell{border-radius:0;box-shadow:none}.tabs{position:sticky;top:0;z-index:20}.tab{padding:12px 4px;font-size:13px}.panel{padding:20px 14px 8px}.section-title{margin:20px 0 12px}select,input[type=number],input[type=text]{min-height:48px;font-size:16px}.btn{min-height:52px;font-size:16px}.check-item{padding:12px}.lcd{padding:18px 14px}.lcd .rate{font-size:40px;gap:6px;flex-wrap:wrap}.breakdown{padding:12px}.breakdown .row{gap:12px;align-items:flex-start}.breakdown .row span:last-child{text-align:right;overflow-wrap:anywhere}footer{padding:0 14px}.disclaimer{margin:14px 12px 0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="banner">
+    <div class="dot">!</div>
+    ก่อนกด START อย่าลืม CHECK — เครื่องมือนี้เป็นตัวช่วยคำนวณเท่านั้น ต้องตรวจสอบซ้ำทุกครั้งตามนโยบายหน่วยงาน
+  </div>
+
+  <div class="shell">
+    <div class="header">
+      <div>
+        <h1>ICU Smart Infusion Calculator</h1>
+        <div class="sub">Weight-based Infusion · คำนวณอัตราการหยด (mL/hr) จากคำสั่งแพทย์</div>
+      </div>
+      <div class="tag">อ้างอิงจาก ICU Smart Infusion Card v1.0</div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="dose2rate">Dose → Rate<br><span style="font-weight:500;font-size:11px;">คำนวณอัตราไหลจาก Dose</span></div>
+      <div class="tab" data-tab="rate2dose">Rate → Dose<br><span style="font-weight:500;font-size:11px;">ตรวจย้อนกลับจากอัตราไหล</span></div>
+    </div>
+
+    <!-- ================= DOSE -> RATE ================= -->
+    <div class="panel active" id="panel-dose2rate">
+
+      <div class="section-title"><div class="num">1</div><h3>เลือกยา (Drug)</h3></div>
+      <div class="field">
+        <label>รายการยา</label>
+        <select id="drugSelect"></select>
+        <div class="hint" id="drugHint"></div>
+      </div>
+
+      <div class="section-title"><div class="num">2</div><h3>ข้อมูลผู้ป่วยและ Dose ตามคำสั่งแพทย์</h3></div>
+      <div class="grid">
+        <div class="field">
+          <label>น้ำหนักผู้ป่วย (kg)</label>
+          <input type="number" id="weight" placeholder="เช่น 60" min="0" step="0.1">
+        </div>
+        <div class="field">
+          <label>Dose ที่แพทย์สั่ง</label>
+          <div class="inline-2">
+            <input type="number" id="doseValue" placeholder="เช่น 0.1" min="0" step="0.001">
+            <select id="doseUnit"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title"><div class="num">3</div><h3>ความเข้มข้นของยาหลังผสม (Concentration)</h3></div>
+      <div class="grid">
+        <div class="field">
+          <label>ปริมาณยาที่ผสม</label>
+          <div class="inline-2">
+            <input type="number" id="drugAmount" placeholder="เช่น 4" min="0" step="0.001">
+            <select id="drugAmountUnit">
+              <option value="mcg">mcg</option>
+              <option value="mg" selected>mg</option>
+              <option value="g">g</option>
+              <option value="units">Units</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>ปริมาตรสารละลายทั้งหมด (mL)</label>
+          <input type="number" id="diluentVol" placeholder="เช่น 100" min="0" step="0.1">
+        </div>
+      </div>
+      <div class="conc-readout" id="concReadout">ความเข้มข้น: —</div>
+
+      <div class="checklist" id="checklist">
+        <div class="checklist-head"><span class="star">★</span><h3>SAFE START CHECK — ต้องติ๊กให้ครบก่อนแสดงผล</h3></div>
+        <div class="check-item" data-i="0"><div class="box">✓</div><div class="txt"><b>Dose</b> — ตรวจสอบขนาดยาตรงตามคำสั่งแพทย์แล้ว</div></div>
+        <div class="check-item critical" data-i="1"><div class="box">✓</div><div class="txt"><b>Unit (จุดเสี่ยงสำคัญที่สุด)</b> — หน่วยของ Dose ตรงกับคำสั่งแพทย์ (mcg/kg/min, mg/hr, Units/hr ฯลฯ)</div></div>
+        <div class="check-item" data-i="2"><div class="box">✓</div><div class="txt"><b>Concentration</b> — ตรวจชนิดสารละลาย ปริมาณ และความเข้มข้นตรงตามมาตรฐานหน่วยงาน</div></div>
+        <div class="check-item" data-i="3"><div class="box">✓</div><div class="txt"><b>Calculation</b> — ตรวจสอบความถูกต้องของผลคำนวณก่อนตั้งค่าเครื่อง Infusion Pump</div></div>
+        <div class="check-item" data-i="4"><div class="box">✓</div><div class="txt"><b>Rate</b> — จะตรวจสอบค่า Rate บนเครื่องปั๊มให้ตรงกับผลคำนวณนี้</div></div>
+        <div class="check-item" data-i="5"><div class="box">✓</div><div class="txt"><b>Independent Double Check</b> — มีบุคลากร 2 คน คำนวณและตรวจสอบแยกจากกันก่อนกด START</div></div>
+      </div>
+
+      <button class="btn btn-primary" id="calcBtn" disabled>คำนวณ Rate (mL/hr)</button>
+      <div class="alert-box" id="alertBox"></div>
+
+      <div class="result" id="resultBox" style="display:none;">
+        <div class="pump">
+          <div class="pump-top">
+            <div class="name">Infusion Pump — Calculated Rate</div>
+            <div class="badge">CHECKED</div>
+          </div>
+          <div class="lcd">
+            <div class="rate" id="lcdRate">0.0 <small>mL/hr</small></div>
+            <div class="drug" id="lcdDrug"></div>
+            <div class="warn" id="lcdWarn"></div>
+          </div>
+        </div>
+
+        <div class="breakdown" id="breakdown"></div>
+
+        <div class="double-check">
+          <div class="ic">👥</div>
+          <div>ผลลัพธ์นี้เป็นเพียงตัวช่วยคำนวณ กรุณาให้บุคลากร 2 คนคำนวณและตรวจสอบซ้ำแบบอิสระต่อกัน (Independent Double Check) ก่อนตั้งค่าและกด START บนเครื่อง Infusion Pump ทุกครั้ง ตามนโยบายความปลอดภัยของหน่วยงาน</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= RATE -> DOSE ================= -->
+    <div class="panel" id="panel-rate2dose">
+      <div class="section-title"><div class="num">1</div><h3>เลือกยา (Drug)</h3></div>
+      <div class="field">
+        <label>รายการยา</label>
+        <select id="drugSelect2"></select>
+        <div class="hint" id="drugHint2"></div>
+      </div>
+      <div class="field" id="customUnitWrap2" style="display:none;">
+        <label>หน่วย Dose สำหรับ Custom</label>
+        <select id="customDoseUnit2"></select>
+        <div class="hint">เลือกหน่วยเดียวกับคำสั่งแพทย์เพื่อใช้คำนวณย้อนกลับ</div>
+      </div>
+
+      <div class="section-title"><div class="num">2</div><h3>ข้อมูลผู้ป่วยและอัตราไหลบนเครื่องปั๊ม</h3></div>
+      <div class="grid">
+        <div class="field">
+          <label>น้ำหนักผู้ป่วย (kg)</label>
+          <input type="number" id="weight2" placeholder="เช่น 60" min="0" step="0.1">
+        </div>
+        <div class="field">
+          <label>อัตราไหลบนเครื่อง (mL/hr)</label>
+          <input type="number" id="rateValue" placeholder="เช่น 4.5" min="0" step="0.1">
+        </div>
+      </div>
+
+      <div class="section-title"><div class="num">3</div><h3>ความเข้มข้นของยาหลังผสม (Concentration)</h3></div>
+      <div class="grid">
+        <div class="field">
+          <label>ปริมาณยาที่ผสม</label>
+          <div class="inline-2">
+            <input type="number" id="drugAmount2" placeholder="เช่น 4" min="0" step="0.001">
+            <select id="drugAmountUnit2">
+              <option value="mcg">mcg</option>
+              <option value="mg" selected>mg</option>
+              <option value="g">g</option>
+              <option value="units">Units</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>ปริมาตรสารละลายทั้งหมด (mL)</label>
+          <input type="number" id="diluentVol2" placeholder="เช่น 100" min="0" step="0.1">
+        </div>
+      </div>
+      <div class="conc-readout" id="concReadout2">ความเข้มข้น: —</div>
+
+      <button class="btn btn-primary" id="calcBtn2">คำนวณ Dose ที่ผู้ป่วยได้รับ</button>
+      <div class="alert-box" id="alertBox2"></div>
+
+      <div class="result" id="resultBox2" style="display:none;">
+        <div class="pump">
+          <div class="pump-top">
+            <div class="name">Delivered Dose — Verification</div>
+            <div class="badge">CHECKED</div>
+          </div>
+          <div class="lcd">
+            <div class="rate" id="lcdDose">0.0 <small id="lcdDoseUnit"></small></div>
+            <div class="drug" id="lcdDrug2"></div>
+          </div>
+        </div>
+        <div class="breakdown" id="breakdown2"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span class="strong">Right Dose · Right Unit · Right Rate = Patient Safety</span><br>
+    ICU Smart Infusion App v1.0 · รองรับ Offline หลังเปิดใช้งานครั้งแรก
+  </footer>
+  <div id="networkStatus" class="offline-pill">ONLINE</div>
+</div>
+
+<div class="disclaimer">
+  ⚠️ <b>ข้อจำกัดความรับผิดชอบ:</b> แอปพลิเคชันนี้เป็น <b>เครื่องมือช่วยคำนวณ</b> เท่านั้น ไม่ใช่อุปกรณ์ทางการแพทย์และไม่ทดแทนดุลยพินิจทางคลินิก
+  ผลลัพธ์ทุกครั้งต้องได้รับการตรวจสอบและยืนยันโดยบุคลากรทางการแพทย์ที่มีคุณสมบัติ ตามนโยบายและมาตรฐานความเข้มข้นยาของหน่วยงานของท่าน
+  ก่อนนำไปตั้งค่าเครื่อง Infusion Pump หรือให้ยาแก่ผู้ป่วยจริงทุกครั้ง
+</div>
+
+<script>
+// ---------------- Drug database (from ICU Smart Infusion Card) ----------------
+// unitType describes numerator (mcg/mg/units) + whether per-kg + per-min or per-hr
+const DRUGS = [
+  {name:"Norepinephrine (NE)", unit:"mcg/kg/min", note:"Vasopressor — titrate ตามความดันโลหิต"},
+  {name:"Fentanyl", unit:"mcg/kg/hr", note:"Opioid analgesic"},
+  {name:"Midazolam", unit:"mg/hr", note:"Sedative — ไม่ปรับตามน้ำหนัก"},
+  {name:"Propofol", unit:"mcg/kg/min", note:"Sedative-hypnotic"},
+  {name:"Cisatracurium (Nimbex®)", unit:"mcg/kg/min", note:"Neuromuscular blocker"},
+  {name:"Dexmedetomidine (Precedex®)", unit:"mcg/kg/hr", note:"Sedative"},
+  {name:"Dobutamine", unit:"mcg/kg/min", note:"Inotrope"},
+  {name:"Dopamine", unit:"mcg/kg/min", note:"Vasopressor/Inotrope"},
+  {name:"Epinephrine (Adrenaline)", unit:"mcg/kg/min", note:"Vasopressor"},
+  {name:"Insulin", unit:"Units/hr", note:"ไม่ปรับตามน้ำหนัก"},
+  {name:"Heparin", unit:"Units/hr", note:"ไม่ปรับตามน้ำหนัก — ตรวจสอบ protocol หน่วยงาน"},
+  {name:"อื่น ๆ / กำหนดเอง (Custom)", unit:"custom", note:"เลือกหน่วยด้วยตนเองด้านล่าง"}
+];
+
+const ALL_UNITS = ["mcg/kg/min","mcg/kg/hr","mg/kg/min","mg/kg/hr","mcg/min","mg/min","mcg/hr","mg/hr","Units/hr","Units/min"];
+
+// mass/unit factors relative to base numerator implied by the dose unit
+const MASS_TO = { mcg:1, mg:1000, g:1000000, units:1 };
+
+function parseDoseUnit(u){
+  // returns {numerator: 'mcg'|'mg'|'Units', perKg: bool, per: 'min'|'hr'}
+  const perKg = u.includes("/kg/");
+  const per = u.endsWith("min") ? "min" : "hr";
+  let numerator = u.split("/")[0]; // mcg, mg, Units
+  return {numerator, perKg, per};
+}
+
+function formatNum(n, digits=4){
+  return Number(n).toLocaleString('en-US',{maximumFractionDigits:digits,useGrouping:false});
+}
+
+function buildDrugSelect(sel, hintEl){
+  sel.innerHTML = DRUGS.map((d,i)=>`<option value="${i}">${d.name}</option>`).join("");
+}
+function buildUnitSelect(sel){
+  sel.innerHTML = ALL_UNITS.map(u=>`<option value="${u}">${u}</option>`).join("");
+}
+
+// =============== PANEL 1: Dose -> Rate ===============
+const drugSelect = document.getElementById('drugSelect');
+const drugHint = document.getElementById('drugHint');
+const doseUnitSel = document.getElementById('doseUnit');
+buildDrugSelect(drugSelect, drugHint);
+buildUnitSelect(doseUnitSel);
+
+function onDrugChange(){
+  const d = DRUGS[drugSelect.value];
+  drugHint.textContent = d.unit === "custom" ? d.note : `หน่วยมาตรฐาน: ${d.unit} — ${d.note}`;
+  if(d.unit !== "custom"){
+    doseUnitSel.value = d.unit;
+    doseUnitSel.disabled = true;
+  } else {
+    doseUnitSel.disabled = false;
+  }
+}
+drugSelect.addEventListener('change', onDrugChange);
+onDrugChange();
+
+const weight = document.getElementById('weight');
+const doseValue = document.getElementById('doseValue');
+const drugAmount = document.getElementById('drugAmount');
+const drugAmountUnit = document.getElementById('drugAmountUnit');
+const diluentVol = document.getElementById('diluentVol');
+const concReadout = document.getElementById('concReadout');
+
+function setCompatibleAmountUnits(selectEl, targetNumerator){
+  const isUnits = targetNumerator === 'Units';
+  Array.from(selectEl.options).forEach(opt=>{ opt.disabled = isUnits ? opt.value !== 'units' : opt.value === 'units'; });
+  if(isUnits) selectEl.value = 'units';
+  else if(selectEl.value === 'units') selectEl.value = 'mg';
+}
+
+function computeConcentration(amountEl, amountUnitEl, volEl, targetNumerator, readoutEl){
+  setCompatibleAmountUnits(amountUnitEl, targetNumerator);
+  const amt = parseFloat(amountEl.value);
+  const vol = parseFloat(volEl.value);
+  if(!Number.isFinite(amt) || !Number.isFinite(vol) || amt<=0 || vol<=0){ readoutEl.textContent = "ความเข้มข้น: —"; return null; }
+  const srcUnit = amountUnitEl.value;
+  const targetIsUnits = targetNumerator === 'Units';
+  if((targetIsUnits && srcUnit !== 'units') || (!targetIsUnits && srcUnit === 'units')){ readoutEl.textContent = "ความเข้มข้น: หน่วยยาไม่สอดคล้องกับ Dose"; return null; }
+  let amountInTarget;
+  if(targetIsUnits) amountInTarget = amt;
+  else {
+    const amtMcg = amt * MASS_TO[srcUnit];
+    amountInTarget = targetNumerator === 'mcg' ? amtMcg : amtMcg/1000;
+  }
+  const conc = amountInTarget / vol;
+  readoutEl.textContent = `ความเข้มข้น: ${formatNum(conc,4)} ${targetNumerator}/mL`;
+  return conc;
+}
+
+[weight, doseValue, drugAmount, drugAmountUnit, diluentVol, doseUnitSel].forEach(el=>{
+  el.addEventListener('input', refreshConc1);
+  el.addEventListener('change', refreshConc1);
+});
+function refreshConc1(){
+  const {numerator} = parseDoseUnit(doseUnitSel.value);
+  computeConcentration(drugAmount, drugAmountUnit, diluentVol, numerator, concReadout);
+}
+refreshConc1();
+
+// Checklist logic
+const checkItems = document.querySelectorAll('#checklist .check-item');
+const calcBtn = document.getElementById('calcBtn');
+checkItems.forEach(item=>{
+  item.addEventListener('click', ()=>{
+    item.classList.toggle('checked');
+    updateCalcBtn();
+  });
+});
+function updateCalcBtn(){
+  const allChecked = Array.from(checkItems).every(i=>i.classList.contains('checked'));
+  calcBtn.disabled = !allChecked;
+}
+
+calcBtn.addEventListener('click', ()=>{
+  const alertBox = document.getElementById('alertBox');
+  alertBox.style.display = 'none';
+
+  const w = parseFloat(weight.value);
+  const dose = parseFloat(doseValue.value);
+  const {numerator, perKg, per} = parseDoseUnit(doseUnitSel.value);
+  const conc = computeConcentration(drugAmount, drugAmountUnit, diluentVol, numerator, concReadout);
+
+  if(perKg && (!w || w<=0)){ showAlert(alertBox,"กรุณากรอกน้ำหนักผู้ป่วย (kg)"); return; }
+  if(!Number.isFinite(dose) || dose<=0){ showAlert(alertBox,"กรุณากรอก Dose ที่มากกว่า 0"); return; }
+  if(!conc || conc<=0){ showAlert(alertBox,"กรุณากรอกปริมาณยาและปริมาตรสารละลายให้ครบถ้วน"); return; }
+
+  const doseBaseInHour = dose * (perKg ? w : 1) * (per === 'min' ? 60 : 1);
+  const rate = doseBaseInHour / conc;
+
+  document.getElementById('resultBox').style.display = 'block';
+  document.getElementById('lcdRate').innerHTML = `${rate.toFixed(2)} <small>mL/hr</small>`;
+  document.getElementById('lcdDrug').textContent = DRUGS[drugSelect.value].name.toUpperCase();
+  const warnEl = document.getElementById('lcdWarn');
+  warnEl.textContent = (rate > 999) ? "⚠ Rate สูงผิดปกติ — ตรวจสอบหน่วยและความเข้มข้นอีกครั้ง" :
+                        (rate < 0.1) ? "⚠ Rate ต่ำมาก — ตรวจสอบหน่วยและความเข้มข้นอีกครั้ง" : "";
+
+  document.getElementById('breakdown').innerHTML = `
+    <h4>รายละเอียดการคำนวณ (สำหรับ Double Check)</h4>
+    <div class="row"><span>ยา</span><span>${DRUGS[drugSelect.value].name}</span></div>
+    <div class="row"><span>น้ำหนักผู้ป่วย</span><span>${perKg ? w+" kg" : "ไม่ใช้น้ำหนัก"}</span></div>
+    <div class="row"><span>Dose สั่ง</span><span>${dose} ${doseUnitSel.value}</span></div>
+    <div class="row"><span>ความเข้มข้นยา</span><span>${conc.toFixed(4)} ${numerator}/mL</span></div>
+    <div class="row"><span>Dose ต่อชั่วโมง (แปลงหน่วย)</span><span>${doseBaseInHour.toFixed(4)} ${numerator}/hr${perKg? " (รวมน้ำหนัก)":""}</span></div>
+    <div class="row"><span>อัตราไหลที่คำนวณได้</span><span>${rate.toFixed(2)} mL/hr</span></div>
+  `;
+  document.getElementById('resultBox').scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+
+function showAlert(box,msg){ box.textContent = "⚠ " + msg; box.style.display='block'; }
+
+// =============== PANEL 2: Rate -> Dose ===============
+const drugSelect2 = document.getElementById('drugSelect2');
+const drugHint2 = document.getElementById('drugHint2');
+const customDoseUnit2 = document.getElementById('customDoseUnit2');
+const customUnitWrap2 = document.getElementById('customUnitWrap2');
+buildDrugSelect(drugSelect2, drugHint2);
+buildUnitSelect(customDoseUnit2);
+function effectiveDoseUnit2(){
+  const d = DRUGS[drugSelect2.value];
+  return d.unit === 'custom' ? customDoseUnit2.value : d.unit;
+}
+function onDrugChange2(){
+  const d = DRUGS[drugSelect2.value];
+  customUnitWrap2.style.display = d.unit === 'custom' ? 'block' : 'none';
+  drugHint2.textContent = d.unit === 'custom' ? "โหมด Custom — กรุณาเลือกหน่วย Dose ให้ตรงกับคำสั่งแพทย์" : `หน่วยมาตรฐาน: ${d.unit} — ${d.note}`;
+  if(typeof refreshConc2 === 'function') refreshConc2();
+}
+drugSelect2.addEventListener('change', onDrugChange2);
+customDoseUnit2.addEventListener('change', ()=>{ if(typeof refreshConc2 === 'function') refreshConc2(); });
+onDrugChange2();
+
+const weight2 = document.getElementById('weight2');
+const rateValue = document.getElementById('rateValue');
+const drugAmount2 = document.getElementById('drugAmount2');
+const drugAmountUnit2 = document.getElementById('drugAmountUnit2');
+const diluentVol2 = document.getElementById('diluentVol2');
+const concReadout2 = document.getElementById('concReadout2');
+
+function currentNumerator2(){
+  return parseDoseUnit(effectiveDoseUnit2()).numerator;
+}
+[weight2, rateValue, drugAmount2, drugAmountUnit2, diluentVol2, drugSelect2].forEach(el=>{
+  el.addEventListener('input', refreshConc2);
+  el.addEventListener('change', refreshConc2);
+});
+function refreshConc2(){
+  computeConcentration(drugAmount2, drugAmountUnit2, diluentVol2, currentNumerator2(), concReadout2);
+}
+refreshConc2();
+
+document.getElementById('calcBtn2').addEventListener('click', ()=>{
+  const alertBox2 = document.getElementById('alertBox2');
+  alertBox2.style.display = 'none';
+
+  const d = DRUGS[drugSelect2.value];
+  const doseUnit = effectiveDoseUnit2();
+  const {numerator, perKg, per} = parseDoseUnit(doseUnit);
+  const w = parseFloat(weight2.value);
+  const rate = parseFloat(rateValue.value);
+  const conc = computeConcentration(drugAmount2, drugAmountUnit2, diluentVol2, numerator, concReadout2);
+
+  if(perKg && (!w || w<=0)){ showAlert(alertBox2,"กรุณากรอกน้ำหนักผู้ป่วย (kg)"); return; }
+  if(!Number.isFinite(rate) || rate<=0){ showAlert(alertBox2,"กรุณากรอกอัตราไหล (mL/hr) ที่มากกว่า 0"); return; }
+  if(!conc || conc<=0){ showAlert(alertBox2,"กรุณากรอกปริมาณยาและปริมาตรสารละลายให้ครบถ้วน"); return; }
+
+  const deliveredPerHour = rate * conc; // numerator per hour
+  let doseOut = deliveredPerHour;
+  if(perKg) doseOut /= w;
+  if(per === 'min') doseOut /= 60;
+  const unitOut = doseUnit;
+
+  document.getElementById('resultBox2').style.display = 'block';
+  document.getElementById('lcdDose').innerHTML = `${formatNum(doseOut,6)} <small id="lcdDoseUnit">${unitOut}</small>`;
+  document.getElementById('lcdDrug2').textContent = d.name.toUpperCase();
+
+  document.getElementById('breakdown2').innerHTML = `
+    <h4>รายละเอียดการคำนวณย้อนกลับ</h4>
+    <div class="row"><span>ยา</span><span>${d.name}</span></div>
+    <div class="row"><span>น้ำหนักผู้ป่วย</span><span>${perKg ? w+" kg" : "ไม่ใช้น้ำหนัก"}</span></div>
+    <div class="row"><span>อัตราไหลบนเครื่อง</span><span>${rate} mL/hr</span></div>
+    <div class="row"><span>ความเข้มข้นยา</span><span>${conc.toFixed(4)} ${numerator}/mL</span></div>
+    <div class="row"><span>ปริมาณยาที่ได้รับต่อชั่วโมง</span><span>${deliveredPerHour.toFixed(4)} ${numerator}/hr</span></div>
+    <div class="row"><span>Dose ที่ผู้ป่วยได้รับจริง</span><span>${formatNum(doseOut,6)} ${unitOut}</span></div>
+  `;
+  document.getElementById('resultBox2').scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+
+// =============== Tabs ===============
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+  });
+});
+// =============== PWA / Offline ===============
+function updateNetworkStatus(){
+  const el = document.getElementById('networkStatus');
+  if(!el) return;
+  const online = navigator.onLine;
+  el.textContent = online ? 'ONLINE' : 'OFFLINE';
+  el.classList.toggle('offline', !online);
+}
+window.addEventListener('online', updateNetworkStatus);
+window.addEventListener('offline', updateNetworkStatus);
+updateNetworkStatus();
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(console.error));
+}
+
+</script>
+</body>
+</html>
