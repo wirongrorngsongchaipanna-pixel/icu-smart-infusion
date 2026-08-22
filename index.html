@@ -590,7 +590,7 @@ function onDrugChange2(){
 }
 drugSelect2.addEventListener('change', onDrugChange2);
 customDoseUnit2.addEventListener('change', ()=>{ if(typeof refreshConc2 === 'function') refreshConc2(); });
-onDrugChange2();
+
 
 const weight2 = document.getElementById('weight2');
 const rateValue = document.getElementById('rateValue');
@@ -609,7 +609,7 @@ function currentNumerator2(){
 function refreshConc2(){
   computeConcentration(drugAmount2, drugAmountUnit2, diluentVol2, currentNumerator2(), concReadout2);
 }
-refreshConc2();
+refreshConc2();onDrugChange2();
 
 document.getElementById('calcBtn2').addEventListener('click', ()=>{
   const alertBox2 = document.getElementById('alertBox2');
