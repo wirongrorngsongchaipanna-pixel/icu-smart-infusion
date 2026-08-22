@@ -544,7 +544,9 @@ calcBtn.addEventListener('click', ()=>{
   if(perKg && (!w || w<=0)){ showAlert(alertBox,"กรุณากรอกน้ำหนักผู้ป่วย (kg)"); return; }
   if(!Number.isFinite(dose) || dose<=0){ showAlert(alertBox,"กรุณากรอก Dose ที่มากกว่า 0"); return; }
   if(!conc || conc<=0){ showAlert(alertBox,"กรุณากรอกปริมาณยาและปริมาตรสารละลายให้ครบถ้วน"); return; }
-
+  if (typeof gtag === 'function') {
+  gtag('event', 'dose_to_rate_calculation');
+}
   const doseBaseInHour = dose * (perKg ? w : 1) * (per === 'min' ? 60 : 1);
   const rate = doseBaseInHour / conc;
 
@@ -623,7 +625,9 @@ document.getElementById('calcBtn2').addEventListener('click', ()=>{
   if(perKg && (!w || w<=0)){ showAlert(alertBox2,"กรุณากรอกน้ำหนักผู้ป่วย (kg)"); return; }
   if(!Number.isFinite(rate) || rate<=0){ showAlert(alertBox2,"กรุณากรอกอัตราไหล (mL/hr) ที่มากกว่า 0"); return; }
   if(!conc || conc<=0){ showAlert(alertBox2,"กรุณากรอกปริมาณยาและปริมาตรสารละลายให้ครบถ้วน"); return; }
-
+  if (typeof gtag === 'function') {
+  gtag('event', 'rate_to_dose_calculation');
+}
   const deliveredPerHour = rate * conc; // numerator per hour
   let doseOut = deliveredPerHour;
   if(perKg) doseOut /= w;
