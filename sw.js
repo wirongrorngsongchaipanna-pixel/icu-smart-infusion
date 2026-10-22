@@ -1,10 +1,10 @@
-const CACHE_NAME = 'icu-smart-infusion-v1.0.0';
+const CACHE_NAME = 'icu-smart-infusion-v1.0.1';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', event => {
